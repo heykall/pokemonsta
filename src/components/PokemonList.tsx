@@ -1,32 +1,55 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect, useCallback } from 'react';
 import PokemonCard from './PokemonCard';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Button from './ui/Button';
-import LoadingSpinner from './ui/LoadingSpinner';
+import { PokemonCardSkeleton } from './ui/SkeletonLoader';
 import { usePokemons } from '../hooks/usePokemons';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { setOffset } from '../store/slices/pokemonSlice';
-import Pagination from './ui/Pagination';
+import { setOffset, setSearchTerm } from '../store/slices/pokemonSlice';
+import { useInView } from 'react-intersection-observer';
+import { Pokemon } from '../types/pokemon';
 
 const PokemonList: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { offset, limit } = useAppSelector(state => state.pokemon);
-  const { data, isLoading, isError } = usePokemons();
+  const { offset, limit, searchTerm } = useAppSelector(state => state.pokemon);
+  const { data, isLoading, isError, isFetchingNextPage, fetchNextPage, hasNextPage } = usePokemons();
 
-  const handlePrevPage = () => {
-    dispatch(setOffset(Math.max(0, offset - limit)));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  // Intersection observer for infinite scroll
+  const { ref, inView } = useInView({
+    threshold: 0.1,
+    rootMargin: '0px 0px 500px 0px',
+  });
 
-  const handleNextPage = () => {
-    if (data && offset + limit < data.totalCount) {
-      dispatch(setOffset(offset + limit));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Load more when bottom is reached
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
     }
-  };
+  }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  if (isLoading) {
-    return <LoadingSpinner />;
+  // Filter pokemons based on search term
+  const filteredPokemons = useCallback((pokemons: Pokemon[]) => {
+    if (!searchTerm) return pokemons;
+    
+    return pokemons.filter(pokemon => 
+      pokemon.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      pokemon.id.toString().includes(searchTerm)
+    );
+  }, [searchTerm]);
+
+  // Flatten all pages of pokemon data
+  const allPokemons = data?.pages.flatMap(page => page.pokemons) || [];
+  const displayedPokemons = filteredPokemons(allPokemons);
+  
+  // Show skeletons for initial load
+  if (isLoading && !allPokemons.length) {
+    return (
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          {Array.from({ length: 12 }).map((_, index) => (
+            <PokemonCardSkeleton key={index} />
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (isError) {
@@ -37,10 +60,10 @@ const PokemonList: React.FC = () => {
     );
   }
 
-  if (!data || data.pokemons.length === 0) {
+  if (displayedPokemons.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <p>No Pokémon found.</p>
+        <p>No Pokémon found matching "{searchTerm}".</p>
       </div>
     );
   }
@@ -48,22 +71,27 @@ const PokemonList: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-        {data.pokemons.map((pokemon) => (
+        {displayedPokemons.map((pokemon) => (
           <PokemonCard key={pokemon.id} pokemon={pokemon} />
         ))}
       </div>
       
-      <Pagination 
-        currentPage={Math.floor(offset / limit) + 1}
-        totalPages={Math.ceil(data.totalCount / limit)}
-        onPrevPage={handlePrevPage}
-        onNextPage={handleNextPage}
-        totalItems={data.totalCount}
-        itemsPerPage={limit}
-        currentOffset={offset}
-      />
+      {/* Loading indicator at bottom for infinite scroll */}
+      {(isFetchingNextPage || hasNextPage) && (
+        <div ref={ref} className="mt-8 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <PokemonCardSkeleton key={index} />
+          ))}
+        </div>
+      )}
+      
+      {!hasNextPage && !isFetchingNextPage && displayedPokemons.length > 0 && (
+        <div className="text-center py-8 text-gray-500">
+          You've reached the end of the list!
+        </div>
+      )}
     </div>
   );
 };
 
-export default PokemonList;
+export default memo(PokemonList);

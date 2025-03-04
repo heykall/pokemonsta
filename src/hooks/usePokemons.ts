@@ -1,15 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { getPokemonList, getPokemon } from '../services/api';
 import { Pokemon } from '../types/pokemon';
 import { useAppSelector } from './useAppSelector';
 
 export const usePokemons = () => {
-  const { offset, limit } = useAppSelector(state => state.pokemon);
+  const { limit, searchTerm } = useAppSelector(state => state.pokemon);
 
-  return useQuery({
-    queryKey: ['pokemonList', offset, limit],
-    queryFn: async () => {
-      const listResponse = await getPokemonList(limit, offset);
+  return useInfiniteQuery({
+    queryKey: ['pokemonList', limit, searchTerm],
+    queryFn: async ({ pageParam = 0 }) => {
+      const listResponse = await getPokemonList(limit, pageParam);
       
       const pokemonPromises = listResponse.results.map((item: { name: string }) => 
         getPokemon(item.name)
@@ -20,7 +20,15 @@ export const usePokemons = () => {
       return {
         pokemons: pokemonResults as Pokemon[],
         totalCount: listResponse.count,
+        nextOffset: pageParam + limit,
       };
     },
+    getNextPageParam: (lastPage) => {
+      if (lastPage.nextOffset >= lastPage.totalCount) {
+        return undefined;
+      }
+      return lastPage.nextOffset;
+    },
+    initialPageParam: 0,
   });
 };

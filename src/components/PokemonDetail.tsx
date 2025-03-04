@@ -5,16 +5,12 @@ import {
   formatPokemonName, 
   getTypeColor, 
   getTypeTextColor,
-  getStatColor,
-  formatStatName,
-  calculateGenderRatio
 } from '../utils/helpers';
 import { ArrowLeft, Heart } from 'lucide-react';
 import Badge from './ui/Badge';
 import Tabs from './ui/Tabs';
-import StatBar from './ui/StatBar';
 import Button from './ui/Button';
-import LoadingSpinner from './ui/LoadingSpinner';
+import { PokemonDetailSkeleton } from './ui/SkeletonLoader';
 import { usePokemonDetail } from '../hooks/usePokemonDetail';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { toggleFavorite } from '../store/slices/pokemonSlice';
@@ -37,7 +33,7 @@ const PokemonDetail: React.FC = () => {
   };
 
   if (isLoading) {
-    return <LoadingSpinner />;
+    return <PokemonDetailSkeleton />;
   }
 
   if (isError || !data || !data.pokemon) {
@@ -142,4 +138,4 @@ const PokemonDetail: React.FC = () => {
   );
 };
 
-export default PokemonDetail;
+export default memo(PokemonDetail);
