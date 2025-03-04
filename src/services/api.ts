@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Pokemon, PokemonListResponse, PokemonSpecies } from '../types/pokemon';
 
-const API_URL = 'https://pokeapi.co/api/v2';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const getPokemonList = async (limit = 20, offset = 0): Promise<PokemonListResponse> => {
   const response = await axios.get(`${API_URL}/pokemon?limit=${limit}&offset=${offset}`);

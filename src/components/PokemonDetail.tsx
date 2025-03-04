@@ -97,7 +97,7 @@ const PokemonDetail: React.FC = () => {
         </div>
       </div>
       
-      <div className="container mx-auto px-4 -mt-16 relative z-10">
+      <div className="container mx-auto px-4 -mt-16 relative z-9">
         <div className="flex justify-center mb-6">
           <img
             src={pokemon.sprites.other['official-artwork'].front_default || pokemon.sprites.front_default}

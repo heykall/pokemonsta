@@ -1,10 +1,8 @@
 import React, { memo } from 'react';
 import { Link } from 'react-router-dom';
-import { formatPokemonId, formatPokemonName, getTypeColor, getTypeTextColor } from '../utils/helpers';
+import { getTypeColor, getTypeTextColor } from '../utils/helpers';
 import { Pokemon } from '../types/pokemon';
 import Card from './ui/Card';
-import Badge from './ui/Badge';
-import { Heart } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { toggleFavorite } from '../store/slices/pokemonSlice';
 import PokemonCardContent from './PokemonCardContent';

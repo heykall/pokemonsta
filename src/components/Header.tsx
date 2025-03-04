@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, Menu, X, Filter } from 'lucide-react';
+import { Search, Menu, X} from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { setSearchTerm } from '../store/slices/pokemonSlice';
 
@@ -12,7 +12,6 @@ const Header: React.FC = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
   const searchInputRef = useRef<HTMLInputElement>(null);
   
-  // Handle search input change with debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       dispatch(setSearchTerm(debouncedSearchTerm));
@@ -21,12 +20,10 @@ const Header: React.FC = () => {
     return () => clearTimeout(timer);
   }, [debouncedSearchTerm, dispatch]);
   
-  // Reset mobile search visibility when navigating
   useEffect(() => {
     setMobileSearchVisible(false);
   }, [location.pathname]);
   
-  // Focus search input when mobile search becomes visible
   useEffect(() => {
     if (mobileSearchVisible && searchInputRef.current) {
       searchInputRef.current.focus();

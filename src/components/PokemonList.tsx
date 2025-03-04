@@ -2,30 +2,24 @@ import React, { memo, useEffect, useCallback } from 'react';
 import PokemonCard from './PokemonCard';
 import { PokemonCardSkeleton } from './ui/SkeletonLoader';
 import { usePokemons } from '../hooks/usePokemons';
-import { useAppDispatch, useAppSelector } from '../hooks';
-import { setOffset, setSearchTerm } from '../store/slices/pokemonSlice';
+import { useAppSelector } from '../hooks';
 import { useInView } from 'react-intersection-observer';
 import { Pokemon } from '../types/pokemon';
 
 const PokemonList: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { offset, limit, searchTerm } = useAppSelector(state => state.pokemon);
+  const { searchTerm } = useAppSelector(state => state.pokemon);
   const { data, isLoading, isError, isFetchingNextPage, fetchNextPage, hasNextPage } = usePokemons();
-
-  // Intersection observer for infinite scroll
   const { ref, inView } = useInView({
     threshold: 0.1,
     rootMargin: '0px 0px 500px 0px',
   });
 
-  // Load more when bottom is reached
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [inView, fetchNextPage, hasNextPage, isFetchingNextPage]);
 
-  // Filter pokemons based on search term
   const filteredPokemons = useCallback((pokemons: Pokemon[]) => {
     if (!searchTerm) return pokemons;
     
@@ -35,11 +29,9 @@ const PokemonList: React.FC = () => {
     );
   }, [searchTerm]);
 
-  // Flatten all pages of pokemon data
   const allPokemons = data?.pages.flatMap(page => page.pokemons) || [];
   const displayedPokemons = filteredPokemons(allPokemons);
   
-  // Show skeletons for initial load
   if (isLoading && !allPokemons.length) {
     return (
       <div className="container mx-auto px-4 py-6">
