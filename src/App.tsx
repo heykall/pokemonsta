@@ -15,7 +15,7 @@ function App() {
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<div className="h-screen w-full bg-gray-100 animate-pulse"></div>}>
             <Routes>
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<HomePage />} />
